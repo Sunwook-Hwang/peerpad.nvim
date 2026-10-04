@@ -230,3 +230,7 @@ Peer colors use `LiveSharePeer1` through `LiveSharePeer6`, linked to the active 
 native diagnostic/Visual groups. No icon font is required.
 
 [한국어 사용 안내](README.ko.md)
+
+## License
+
+[MIT License](LICENSE), copyright (c) 2026 Sunwook Hwang.

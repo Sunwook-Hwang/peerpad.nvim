@@ -195,3 +195,7 @@ vim.keymap.set("n", "<leader>Pi", "<Cmd>PeerpadStatus<CR>", {
 `LiveSharePeer1`~`LiveSharePeer6`으로 변경할 수 있으며 아이콘 폰트는 필요하지 않습니다.
 
 [English guide](README.md)
+
+## 라이선스
+
+[MIT 라이선스](LICENSE), 저작권 (c) 2026 Sunwook Hwang.
