@@ -206,3 +206,7 @@ Neovim 0.13에서는 `:restart`를 포함한 네이티브 세션 저장에서 �
 `LiveSharePeer1`~`LiveSharePeer6`으로 변경할 수 있으며 아이콘 폰트는 필요하지 않습니다.
 
 [English guide](README.md)
+
+## 라이선스
+
+[MIT 라이선스](LICENSE), 저작권 (c) 2026 Sunwook Hwang.
