@@ -512,6 +512,7 @@ end
 local function create_buffer(session, message)
 	local buf = vim.api.nvim_create_buf(true, false)
 	session.buf, session.text, session.file = buf, message.text, message.file
+	vim.b[buf].peerpad_source = session.target.buf
 	vim.api.nvim_buf_set_name(
 		buf,
 		"peerpad://" .. message.session .. "/" .. session.id .. "/" .. vim.fs.basename(message.file)
@@ -1139,6 +1140,68 @@ function M.status()
 		lines[#lines + 1] = ("  %s at line %d, column %d"):format(peer.label, row + 1, col + 1)
 	end
 	notify(table.concat(lines, "\n"))
+end
+
+-- 0.13 :restart serializes windows through :mksession. Serialize the source
+-- view instead of a TCP scratch buffer, even when sessionoptions includes blank.
+if vim.fn.has("nvim-0.13") == 1 then
+	local excluded
+	local function set_buffer(win, buf, view)
+		vim.api.nvim_win_call(win, function()
+			vim.cmd("noautocmd keepalt buffer! " .. buf)
+			vim.fn.winrestview(view)
+		end)
+	end
+	vim.api.nvim_create_autocmd("SessionWritePre", {
+		group = group,
+		callback = function()
+			if excluded then
+				return
+			end
+			excluded = { buffers = {}, windows = {} }
+			for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+				if vim.bo[buf].buftype == "acwrite" and vim.api.nvim_buf_get_name(buf):match("^peerpad://") then
+					excluded.buffers[buf] = vim.bo[buf].buflisted
+					vim.bo[buf].buflisted, vim.bo[buf].buftype = false, "nofile"
+				end
+			end
+			for _, win in ipairs(vim.api.nvim_list_wins()) do
+				local buf = vim.api.nvim_win_get_buf(win)
+				if excluded.buffers[buf] ~= nil then
+					local view = vim.api.nvim_win_call(win, vim.fn.winsaveview)
+					excluded.windows[win] = { buf = buf, view = view }
+					local source = vim.b[buf].peerpad_source
+					if not source or not policy.allows(source) then
+						excluded.blank = excluded.blank or vim.api.nvim_create_buf(false, true)
+						source = excluded.blank
+					end
+					set_buffer(win, source, view)
+				end
+			end
+		end,
+	})
+	vim.api.nvim_create_autocmd("SessionWritePost", {
+		group = group,
+		callback = function()
+			if not excluded then
+				return
+			end
+			for buf, listed in pairs(excluded.buffers) do
+				if vim.api.nvim_buf_is_valid(buf) then
+					vim.bo[buf].buftype, vim.bo[buf].buflisted = "acwrite", listed
+				end
+			end
+			for win, saved in pairs(excluded.windows) do
+				if vim.api.nvim_win_is_valid(win) and vim.api.nvim_buf_is_valid(saved.buf) then
+					set_buffer(win, saved.buf, saved.view)
+				end
+			end
+			if excluded.blank and vim.api.nvim_buf_is_valid(excluded.blank) then
+				vim.api.nvim_buf_delete(excluded.blank, { force = true })
+			end
+			excluded = nil
+		end,
+	})
 end
 
 vim.api.nvim_create_autocmd("VimLeavePre", {

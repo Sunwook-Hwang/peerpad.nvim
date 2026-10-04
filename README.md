@@ -206,6 +206,19 @@ require("peerpad").status()
 require("peerpad").stop()
 ```
 
+## Neovim 0.13 compatibility
+
+On Neovim 0.13, shared buffers and disconnected snapshots are excluded from
+native session saves, including `:restart`. A TCP collaboration session cannot
+be restored from a `peerpad://` filename. Before restarting, the owner should
+save synchronized changes with `:w`; guests should copy any retained snapshot
+into a normal file. Reconnect after restarting.
+
+The filter runs only when a session is written, restores buffer options afterward,
+and serializes the original source view in place of visible shared buffers. If that
+source was removed, an empty view is used. Native autoread, `Q` and `.` behavior is unchanged.
+Neovim 0.12 keeps its existing behavior.
+
 ## Safety and limits
 
 - The bearer token authorizes access. TCP is not encrypted; use a trusted network or an SSH tunnel.

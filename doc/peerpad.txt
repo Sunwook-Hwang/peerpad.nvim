@@ -45,6 +45,17 @@ Safe Git exclusion or sidecar write failures leave manual joining available.
 Source conflicts block saving. Maximum document size: 1 MiB.
 Shared acwrite buffers do not automatically attach language servers.
 
+NEOVIM 0.13                                         *peerpad-compat*
+
+Shared buffers and disconnected snapshots are excluded from native session
+writes, including :restart. Session files cannot restore TCP connections or
+peerpad:// scratch text. Before restarting, owners should :write synchronized
+changes; guests should copy retained snapshots into normal files. Reconnect
+after restarting. Visible shared windows serialize their original source,
+or an empty view if it was removed. Live buffers and views are restored
+after each session write.
+Native autoread, Q and . are unchanged. Neovim 0.12 behavior is unchanged.
+
 See README.md and README.ko.md for installation and the full safety model.
 
  vim:tw=78:ts=8:noet:ft=help:norl:
